@@ -1,0 +1,2533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>贪吃蛇 · 传送门 · 道具</title>
+<style>
+  :root{
+    --accent:#4ade80;
+    --accent2:#22d3ee;
+    --bg:#0b1017;
+    --panel:#131c27;
+    --line:#24384b;
+    --muted:#8aa0b4;
+    --text:#e6edf3;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:radial-gradient(1200px 600px at 50% -10%, #1b2b3d 0%, #0b1017 60%);
+    color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+    -webkit-tap-highlight-color:transparent;
+    user-select:none;
+    -webkit-user-select:none;
+    padding:10px;
+    overflow:hidden;
+  }
+  .app{ width:min(94vw,440px); height:min(94vh,880px); display:flex; flex-direction:column; }
+
+  /* ---------- 屏幕 ---------- */
+  .screen{
+    display:none; flex-direction:column; flex:1; min-height:0;
+    gap:12px; animation:fade .22s ease;
+  }
+  .screen.active{ display:flex; }
+  @keyframes fade{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+
+  /* ---------- 按钮 ---------- */
+  .btn{
+    padding:14px 24px; border:0; border-radius:14px;
+    font-size:16px; font-weight:700; color:#06210f;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    cursor:pointer; font-family:inherit;
+    box-shadow:0 10px 24px -10px var(--accent);
+    transition:transform .08s, box-shadow .15s;
+  }
+  .btn:active{ transform:translateY(2px); box-shadow:0 4px 12px -8px var(--accent); }
+  .btn.big{ font-size:17px; padding:16px 24px; }
+  .btn.timed{
+    background:linear-gradient(135deg,#fbbf24,#f97316);
+    box-shadow:0 10px 24px -10px #fbbf24; color:#2a1500;
+  }
+  .btn.ghost{
+    background:var(--panel); color:#cfe1f2;
+    box-shadow:0 0 0 1px var(--line);
+    font-weight:600; font-size:14px; padding:13px 16px;
+  }
+  .btn.ghost.active{
+    color:#06210f;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    box-shadow:0 6px 18px -8px var(--accent);
+  }
+  .btn.small{ padding:10px 12px; font-size:13px; border-radius:11px; flex:1; }
+
+  /* ---------- 主菜单 ---------- */
+  #scr-menu{
+    justify-content:center; gap:0; padding:6px 4px;
+    overflow-y:auto; -webkit-overflow-scrolling:touch;
+  }
+  .hero{ text-align:center; margin-bottom:20px; flex:0 0 auto; }
+  .logo-skin{ display:block; margin:0 auto 2px; }
+  .hero h1{
+    margin:4px 0 4px; font-size:30px; letter-spacing:4px;
+    background:linear-gradient(135deg,#4ade80,#22d3ee);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .hero .sub{ margin:0; color:var(--muted); font-size:12px; letter-spacing:2px; }
+  .skin-row{
+    display:flex; gap:8px; justify-content:center;
+    margin-top:12px; flex-wrap:wrap;
+  }
+  .skin-dot{
+    width:30px; height:30px; border-radius:50%; border:0;
+    cursor:pointer; padding:0;
+    box-shadow:0 0 0 2px rgba(255,255,255,.08);
+    transition:transform .12s, box-shadow .15s;
+  }
+  .skin-dot.on{
+    box-shadow:0 0 0 3px #0b1017, 0 0 0 5px var(--accent);
+    transform:scale(1.1);
+  }
+  .skin-label{ margin-top:7px; font-size:11.5px; color:var(--muted); letter-spacing:1px; }
+
+  .menu-btns{ display:flex; flex-direction:column; gap:10px; flex:0 0 auto; }
+  .menu-row{ display:flex; gap:8px; }
+  .menu-row .btn{ flex:1; }
+  .menu-meta{
+    margin-top:18px; text-align:center;
+    font-size:12.5px; color:var(--muted); line-height:1.9; flex:0 0 auto;
+  }
+  .menu-meta b{ color:var(--accent); }
+
+  /* ---------- 顶栏 ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:2px 0; flex:0 0 auto;
+  }
+  .topbar h2{ margin:0; font-size:18px; letter-spacing:1px; }
+  .icon-btn{
+    width:38px; height:38px; border-radius:12px; border:0;
+    background:var(--panel); color:#cfe1f2; font-size:17px;
+    cursor:pointer; box-shadow:0 0 0 1px var(--line);
+    font-family:inherit; padding:0; line-height:1;
+  }
+  .icon-btn:active{ transform:scale(.95); }
+
+  /* ---------- 设置 ---------- */
+  #scr-settings{
+    overflow-y:auto; -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain; padding-right:2px;
+  }
+  .field{ margin-top:16px; flex:0 0 auto; }
+  .field > label{
+    display:block; font-size:12.5px; color:var(--muted);
+    letter-spacing:1px; margin-bottom:9px;
+  }
+  .opts{ display:flex; gap:8px; flex-wrap:wrap; }
+  .opts button{
+    flex:1 1 40%; padding:11px 8px;
+    border-radius:12px; border:0;
+    background:var(--panel); color:#b9cde0;
+    font-size:13.5px; font-family:inherit; cursor:pointer;
+    box-shadow:0 0 0 1px var(--line);
+    transition:all .15s;
+  }
+  .opts button.on{
+    color:#06210f;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    box-shadow:0 6px 18px -8px var(--accent);
+    font-weight:700;
+  }
+  .note{ font-size:12px; color:#69829a; line-height:1.85; margin-top:8px; }
+
+  /* ---------- 地图 ---------- */
+  #scr-maps{
+    overflow-y:auto; -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain; padding-right:2px;
+  }
+  .map-list{ display:flex; flex-direction:column; gap:10px; margin-top:6px; padding-bottom:8px; }
+  .map-card{
+    display:flex; gap:13px; align-items:center;
+    padding:9px; border:0; border-radius:14px;
+    background:var(--panel); box-shadow:0 0 0 1px var(--line);
+    cursor:pointer; text-align:left;
+    font-family:inherit; color:var(--text);
+    transition:box-shadow .15s, transform .08s;
+    touch-action:pan-y; flex:0 0 auto;
+  }
+  .map-card:active{ transform:scale(.985); }
+  .map-card.selected{ box-shadow:0 0 0 2px var(--accent), 0 8px 22px -12px var(--accent); }
+  .map-prev{
+    width:72px; height:72px; border-radius:10px;
+    flex:0 0 auto; display:block; background:#0e1621;
+  }
+  .map-name{ font-size:14.5px; font-weight:700; margin-bottom:4px; }
+  .map-card.selected .map-name{ color:var(--accent); }
+  .map-desc{ font-size:11.5px; color:var(--muted); line-height:1.6; }
+
+  /* ---------- 介绍 ---------- */
+  #scr-intro{ overflow-y:auto; -webkit-overflow-scrolling:touch; padding-right:4px; }
+  .intro-body{
+    font-size:13px; line-height:1.9; color:#b9cde0;
+    padding:4px 2px 24px;
+  }
+  .intro-body h3{
+    font-size:14.5px; color:var(--accent);
+    margin:18px 0 8px; padding-bottom:6px;
+    border-bottom:1px solid #1d2b3a; letter-spacing:1px;
+  }
+  .intro-body h3:first-child{ margin-top:2px; }
+  .intro-body p{ margin:6px 0; }
+  .intro-body ul{ margin:6px 0; padding-left:18px; }
+  .intro-body li{ margin:3px 0; }
+  .intro-body b{ color:#e6edf3; }
+  .intro-body .k{ color:var(--accent2); font-weight:700; }
+  .intro-body .warn{ color:#f87171; font-weight:700; }
+  .intro-body .tag{
+    display:inline-block; padding:0 7px; border-radius:5px;
+    font-size:11.5px; font-weight:700; margin-right:5px;
+  }
+
+  /* ---------- 游戏 ---------- */
+  #scr-game{ justify-content:center; }
+  .hud{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:12.5px; padding:0 4px; color:var(--muted);
+    flex:0 0 auto;
+  }
+  .hud .score{ color:var(--accent); font-weight:700; font-size:19px; }
+  .hud .time{ color:#fbbf24; font-weight:700; font-size:17px; font-variant-numeric:tabular-nums; }
+  .hud .time.danger{ color:#f87171; animation:pulse .55s ease infinite; }
+  @keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.45} }
+
+  .eff-row{
+    display:flex; gap:6px; justify-content:center;
+    min-height:18px; flex-wrap:wrap; padding:0 4px;
+    flex:0 0 auto;
+  }
+  .eff-chip{
+    padding:1px 8px; border-radius:7px;
+    font-size:10.5px; font-weight:700;
+    letter-spacing:.5px; line-height:16px;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .board{
+    position:relative; border-radius:16px; overflow:hidden;
+    box-shadow:0 0 0 1px #22303f, 0 18px 40px -12px #000, 0 0 32px -8px rgba(34,211,238,.18);
+    align-self:center; width:min(100%, 58vh);
+  }
+  canvas#cv{ display:block; width:100%; height:auto; touch-action:none; }
+
+  .overlay{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:10px;
+    padding:18px; text-align:center;
+    background:rgba(7,12,18,.85); backdrop-filter:blur(3px);
+    transition:opacity .18s;
+  }
+  .overlay.hidden{ opacity:0; pointer-events:none; }
+  .overlay h1{ margin:0; font-size:21px; }
+  .overlay p{ margin:0; color:#9fb3c6; font-size:13px; line-height:1.85; }
+  .overlay .row{ display:flex; gap:8px; margin-top:4px; }
+  .overlay .row .btn{ padding:11px 18px; font-size:14px; }
+
+  .controls{ display:flex; gap:8px; flex:0 0 auto; }
+  .tip{ text-align:center; font-size:11.5px; color:#69829a; line-height:1.7; flex:0 0 auto; }
+
+  /* ---------- 回放 ---------- */
+  .replay-bar{
+    display:flex; align-items:center; gap:9px;
+    padding:8px 10px; background:var(--panel); border-radius:13px;
+    box-shadow:0 0 0 1px var(--line); flex:0 0 auto;
+  }
+  .replay-bar .icon-btn{ width:34px; height:34px; flex:0 0 auto; font-size:14px; }
+  .progress-wrap{
+    flex:1; height:6px; background:#1d2b3a;
+    border-radius:3px; overflow:hidden;
+    cursor:pointer; position:relative;
+  }
+  .progress-fill{
+    position:absolute; inset:0 auto 0 0; width:0%;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    border-radius:3px;
+  }
+  .replay-label{
+    font-size:11px; color:var(--muted);
+    min-width:62px; text-align:right;
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* ---------- 模态框 ---------- */
+  .modal{
+    position:fixed; inset:0;
+    background:rgba(5,9,14,.85); backdrop-filter:blur(4px);
+    display:none; align-items:center; justify-content:center;
+    z-index:100; padding:20px;
+  }
+  .modal.show{ display:flex; }
+  .modal-box{
+    background:#131c27; border-radius:18px;
+    padding:22px 20px; width:min(100%,340px);
+    box-shadow:0 0 0 1px #24384b, 0 30px 60px -20px #000;
+    text-align:center; animation:modalIn .2s ease;
+  }
+  @keyframes modalIn{
+    from{ opacity:0; transform:translateY(12px) scale(.96); }
+    to{ opacity:1; transform:none; }
+  }
+  .modal-box h3{ margin:0 0 6px; font-size:18px; }
+  .modal-box p{ margin:0 0 16px; font-size:12.5px; color:var(--muted); line-height:1.7; }
+  .modal-btns{ display:flex; flex-direction:column; gap:9px; }
+  .link-btn{
+    background:none; border:0; color:var(--muted);
+    font-size:12.5px; margin-top:12px; cursor:pointer;
+    font-family:inherit; padding:6px;
+  }
+
+  ::-webkit-scrollbar{ width:6px; }
+  ::-webkit-scrollbar-thumb{ background:#24384b; border-radius:3px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============ 主菜单 ============ -->
+  <section class="screen active" id="scr-menu">
+    <div class="hero">
+      <canvas id="logoSkin" class="logo-skin"></canvas>
+      <h1>贪吃蛇</h1>
+      <p class="sub">穿墙 · 传送门 · 道具 · AI</p>
+      <div class="skin-row" id="skinRow"></div>
+      <div class="skin-label" id="skinLabel">经典绿</div>
+    </div>
+    <div class="menu-btns">
+      <button class="btn big" id="btnPlay">经典模式</button>
+      <button class="btn big timed" id="btnTimed">限时模式 · 60 秒</button>
+      <div class="menu-row">
+        <button class="btn ghost" id="btnMap">地图</button>
+        <button class="btn ghost" id="btnSet">设置</button>
+        <button class="btn ghost" id="btnIntro">介绍</button>
+      </div>
+    </div>
+    <div class="menu-meta">
+      最高分 <b id="menuBest">0</b> · 当前地图 <b id="menuMapName">空旷原野</b>
+    </div>
+  </section>
+
+  <!-- ============ 设置 ============ -->
+  <section class="screen" id="scr-settings">
+    <div class="topbar">
+      <button class="icon-btn" id="setBack">←</button>
+      <h2>设置</h2>
+      <span style="width:38px"></span>
+    </div>
+    <div class="field">
+      <label>蛇的速度</label>
+      <div class="opts" id="speedOpts">
+        <button data-v="slow">慢速</button>
+        <button data-v="normal">正常</button>
+        <button data-v="fast">快速</button>
+        <button data-v="insane">极速</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>场地大小</label>
+      <div class="opts" id="sizeOpts">
+        <button data-v="15">15 × 15</button>
+        <button data-v="20">20 × 20</button>
+        <button data-v="25">25 × 25</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>加速机制</label>
+      <div class="opts" id="incOpts">
+        <button data-v="on">每 5 果提速</button>
+        <button data-v="off">保持匀速</button>
+      </div>
+      <div class="note">开启后每吃 5 个果实提速一档，最多提速 5 档后到达该速度档位的上限。</div>
+    </div>
+    <div class="field">
+      <label>说明</label>
+      <div class="note">边界可穿越，踩传送门瞬移到同色门，撞自身或障碍物立即结束。</div>
+    </div>
+  </section>
+
+  <!-- ============ 地图 ============ -->
+  <section class="screen" id="scr-maps">
+    <div class="topbar">
+      <button class="icon-btn" id="mapBack">←</button>
+      <h2>选择地图</h2>
+      <span style="width:38px"></span>
+    </div>
+    <div class="map-list" id="mapList"></div>
+  </section>
+
+  <!-- ============ 介绍 ============ -->
+  <section class="screen" id="scr-intro">
+    <div class="topbar">
+      <button class="icon-btn" id="introBack">←</button>
+      <h2>游戏介绍</h2>
+      <span style="width:38px"></span>
+    </div>
+    <div class="intro-body" id="introBody"></div>
+  </section>
+
+  <!-- ============ 游戏 ============ -->
+  <section class="screen" id="scr-game">
+    <div class="hud">
+      <div>
+        分数 <span class="score" id="score">0</span>
+        <span style="font-size:11px;color:#69829a;margin-left:8px">最高 <b id="best" style="color:#8aa0b4">0</b></span>
+      </div>
+      <div id="timeHud" style="display:none">剩余 <span class="time" id="timeLeft">60</span>s</div>
+      <div id="lenHud">长度 <span id="len">3</span></div>
+    </div>
+
+    <div class="eff-row" id="effRow"></div>
+
+    <div class="board">
+      <canvas id="cv"></canvas>
+      <div class="overlay hidden" id="overlay">
+        <h1 id="ovTitle"></h1>
+        <p id="ovText"></p>
+        <div class="row">
+          <button class="btn" id="ovBtn">继续</button>
+          <button class="btn ghost" id="ovReplayBtn" style="display:none">回放</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls" id="gameControls">
+      <button class="btn ghost small" id="btnPause">暂停</button>
+      <button class="btn ghost small" id="btnAI">AI 托管：关</button>
+      <button class="btn ghost small" id="btnHome">主菜单</button>
+    </div>
+
+    <div class="replay-bar" id="replayBar" style="display:none">
+      <button class="icon-btn" id="replayPlay">▶</button>
+      <div class="progress-wrap" id="replayProgress">
+        <div class="progress-fill" id="replayFill"></div>
+      </div>
+      <div class="replay-label" id="replayLabel">0 / 0</div>
+      <button class="icon-btn" id="replayExit">×</button>
+    </div>
+
+    <div class="tip" id="tip"></div>
+  </section>
+
+</div>
+
+<!-- ============ 限时模式模态框 ============ -->
+<div class="modal" id="modalStart">
+  <div class="modal-box">
+    <h3 id="modalStartTitle">开始游戏</h3>
+    <p id="modalStartDesc"></p>
+    <div class="modal-btns">
+      <button class="btn" id="startManual">手动操控</button>
+      <button class="btn ghost" id="startAI">AI 托管</button>
+    </div>
+    <button class="link-btn" id="startCancel">取消</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =========================================================
+     0. 环境判定
+     ========================================================= */
+  var IS_MOBILE = (function () {
+    if (navigator.maxTouchPoints > 0 &&
+        window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return true;
+    if (/Android|iPhone|iPad|iPod|Windows Phone|Mobile|HarmonyOS/i.test(navigator.userAgent)) return true;
+    return Math.min(window.innerWidth, window.innerHeight) < 560;
+  })();
+
+  function $(id) { return document.getElementById(id); }
+
+  /* =========================================================
+     1. 常量
+     ========================================================= */
+  var DIRS4 = [
+    { x: 1,  y: 0  },
+    { x: -1, y: 0  },
+    { x: 0,  y: 1  },
+    { x: 0,  y: -1 }
+  ];
+
+  var PORTAL_COLORS = ['#22d3ee', '#a78bfa', '#f472b6', '#fbbf24', '#4ade80'];
+
+  var SPEED_PRESETS = {
+    slow:   { base: 190, min: 100 },
+    normal: { base: 140, min: 70  },
+    fast:   { base: 100, min: 55  },
+    insane: { base: 70,  min: 38  }
+  };
+
+  var ITEM_SPAWN_INTERVAL = 5000;   // 每 10 秒刷新一个道具
+  var ITEM_MAX_ON_BOARD   = 5;       // 棋盘上最多同时存在 3 个
+
+  var ITEM_DEFS = {
+    speed:  { name: '加速', color: '#fbbf24', life: 10000, dur: 5000  },
+    slow:   { name: '减速', color: '#60a5fa', life: 10000, dur: 5000  },
+    ghost:  { name: '幽灵', color: '#a78bfa', life: 8000,  dur: 3000  },
+    short:  { name: '缩短', color: '#f87171', life: 12000, dur: 0     },
+    x2:     { name: '双倍', color: '#facc15', life: 15000, dur: 15000 },
+    shield: { name: '护盾', color: '#34d399', life: 8000,  dur: 0     },
+    time:   { name: '加时', color: '#22d3ee', life: 12000, dur: 0     }
+  };
+  var ITEM_WEIGHTS = {
+    shield: 320,   // 免死一次，最高优先
+    ghost:  240,   // 脱困用
+    time:   220,   // 限时模式加时
+    x2:     160,   // 得分翻倍
+    short:   90,   // 蛇很长时才有用
+    speed:   45,
+    slow:    35
+  };
+
+  /* ---- 蛇的皮肤 ---- */
+  var SKINS = [
+    {
+      id: 'classic', name: '经典绿', head: '#4ade80', eye: '#062b16',
+      body: function (t) { return 'hsl(' + (152 - t * 42) + ',72%,' + (62 - t * 20) + '%)'; }
+    },
+    {
+      id: 'neon', name: '霓虹紫', head: '#e879f9', eye: '#2a0a3a',
+      body: function (t) { return 'hsl(' + (292 - t * 32) + ',85%,' + (68 - t * 20) + '%)'; }
+    },
+    {
+      id: 'lava', name: '熔岩', head: '#fbbf24', eye: '#3a1a00',
+      body: function (t) { return 'hsl(' + (32 - t * 26) + ',92%,' + (62 - t * 18) + '%)'; }
+    },
+    {
+      id: 'ocean', name: '深海', head: '#38bdf8', eye: '#062a40',
+      body: function (t) { return 'hsl(' + (202 - t * 32) + ',82%,' + (65 - t * 20) + '%)'; }
+    },
+    {
+      id: 'rainbow', name: '彩虹', head: '#ffffff', eye: '#222222',
+      body: function (t) { return 'hsl(' + ((t * 360 + 160) % 360) + ',80%,62%)'; }
+    }
+  ];
+
+  /* =========================================================
+     2. 地图
+     ========================================================= */
+  var MAPS = [
+    {
+      id: 'empty', name: '空旷原野',
+      desc: '无障碍无传送门，适合熟悉操作',
+      gen: function () { return { blocks: [], portals: [] }; }
+    },
+    {
+      id: 'cross', name: '十字围栏',
+      desc: '中央十字屏障，四角留有通道',
+      gen: function (c, r) {
+        var b = [];
+        var mx = (c - 1) >> 1, my = (r - 1) >> 1;
+        var aV = Math.max(2, Math.round(r * 0.28));
+        var aH = Math.max(2, Math.round(c * 0.28));
+        for (var i = 2; i <= aV; i++) { b.push({ x: mx, y: my - i }); b.push({ x: mx, y: my + i }); }
+        for (var j = 2; j <= aH; j++) { b.push({ x: mx - j, y: my }); b.push({ x: mx + j, y: my }); }
+        return { blocks: b, portals: [] };
+      }
+    },
+    {
+      id: 'box', name: '回字迷宫',
+      desc: '中央方形壁垒，四面各开一个缺口',
+      gen: function (c, r) {
+        var b = [];
+        var x0 = Math.floor(c * 0.22), x1 = c - 1 - Math.floor(c * 0.22);
+        var y0 = Math.floor(r * 0.22), y1 = r - 1 - Math.floor(r * 0.22);
+        var gapW = Math.max(1, Math.floor((x1 - x0) * 0.18));
+        var gx = Math.floor((x0 + x1) / 2) - Math.floor(gapW / 2);
+        var gy = Math.floor((y0 + y1) / 2) - Math.floor(gapW / 2);
+        for (var x = x0; x <= x1; x++) {
+          if (x >= gx && x < gx + gapW) continue;
+          b.push({ x: x, y: y0 }); b.push({ x: x, y: y1 });
+        }
+        for (var y = y0; y <= y1; y++) {
+          if (y >= gy && y < gy + gapW) continue;
+          b.push({ x: x0, y: y }); b.push({ x: x1, y: y });
+        }
+        return { blocks: b, portals: [] };
+      }
+    },
+    {
+      id: 'corners', name: '四角要塞',
+      desc: '四角各有一块方形障碍，中央开阔',
+      gen: function (c, r) {
+        var b = [];
+        var s = Math.max(2, Math.round(Math.min(c, r) * 0.16));
+        var o = 1;
+        var spots = [[o, o], [c - o - s, o], [o, r - o - s], [c - o - s, r - o - s]];
+        for (var k = 0; k < spots.length; k++) {
+          var sp = spots[k];
+          for (var y = sp[1]; y < sp[1] + s; y++)
+            for (var x = sp[0]; x < sp[0] + s; x++) b.push({ x: x, y: y });
+        }
+        return { blocks: b, portals: [] };
+      }
+    },
+    {
+      id: 'corridor', name: '横断走廊',
+      desc: '多道横向屏障交错，考验穿行技巧',
+      gen: function (c, r) {
+        var b = [];
+        var rows = [];
+        for (var y = 3; y < r - 2; y += 4) rows.push(y);
+        for (var i = 0; i < rows.length; i++) {
+          var yy = rows[i];
+          var gap = (i % 2 === 0) ? Math.floor(c * 0.20) : Math.floor(c * 0.66);
+          var gw = Math.max(2, Math.floor(c * 0.14));
+          for (var x = 1; x < c - 1; x++) {
+            if (x >= gap && x < gap + gw) continue;
+            b.push({ x: x, y: yy });
+          }
+        }
+        return { blocks: b, portals: [] };
+      }
+    },
+    {
+      id: 'portal1', name: '传送门径',
+      desc: '一对传送门连接对角，障碍稀少',
+      gen: function (c, r) {
+        var b = [];
+        var mx = (c - 1) >> 1, my = (r - 1) >> 1;
+        var len = Math.max(2, Math.floor(c * 0.22));
+        for (var i = 0; i <= len; i++) {
+          b.push({ x: mx - i, y: my - 3 });
+          b.push({ x: mx + i, y: my + 3 });
+        }
+        return {
+          blocks: b,
+          portals: [{ a: { x: 2, y: 2 }, b: { x: c - 3, y: r - 3 } }]
+        };
+      }
+    },
+    {
+      id: 'portal2', name: '双子回廊',
+      desc: '两对传送门 + 四边短墙',
+      gen: function (c, r) {
+        var b = [];
+        var my = (r - 1) >> 1;
+        var len = Math.max(2, Math.floor(c * 0.16));
+        for (var i = 1; i <= len; i++) {
+          b.push({ x: i, y: 1 });
+          b.push({ x: i, y: r - 2 });
+          b.push({ x: c - 1 - i, y: 1 });
+          b.push({ x: c - 1 - i, y: r - 2 });
+        }
+        return {
+          blocks: b,
+          portals: [
+            { a: { x: 3, y: my - 2 }, b: { x: c - 4, y: my + 2 } },
+            { a: { x: c - 4, y: my - 2 }, b: { x: 3, y: my + 2 } }
+          ]
+        };
+      }
+    },
+    {
+      id: 'portal3', name: '交错虫洞',
+      desc: '两对传送门 + 四角障碍阵',
+      gen: function (c, r) {
+        var b = [];
+        var s = Math.max(2, Math.round(Math.min(c, r) * 0.12));
+        var o = 2;
+        var spots = [[o, o], [c - o - s, r - o - s], [c - o - s, o], [o, r - o - s]];
+        for (var k = 0; k < spots.length; k++) {
+          var sp = spots[k];
+          for (var y = sp[1]; y < sp[1] + s; y++)
+            for (var x = sp[0]; x < sp[0] + s; x++) b.push({ x: x, y: y });
+        }
+        return {
+          blocks: b,
+          portals: [
+            { a: { x: 1, y: (r - 1) >> 1 }, b: { x: c - 2, y: (r - 1) >> 1 } },
+            { a: { x: (c - 1) >> 1, y: 1 }, b: { x: (c - 1) >> 1, y: r - 2 } }
+          ]
+        };
+      }
+    },
+    {
+      id: 'triple', name: '三重叠门',
+      desc: '三对传送门 + 四角方块',
+      gen: function (c, r) {
+        var b = [];
+        var s = Math.max(1, Math.round(Math.min(c, r) * 0.10));
+        var o = 1;
+        var spots = [[o, o], [c - o - s, o], [o, r - o - s], [c - o - s, r - o - s]];
+        for (var k = 0; k < spots.length; k++) {
+          var sp = spots[k];
+          for (var y = sp[1]; y < sp[1] + s; y++)
+            for (var x = sp[0]; x < sp[0] + s; x++) b.push({ x: x, y: y });
+        }
+        var mx = (c - 1) >> 1, my = (r - 1) >> 1;
+        return {
+          blocks: b,
+          portals: [
+            { a: { x: 4, y: my }, b: { x: c - 5, y: my } },
+            { a: { x: mx, y: 4 }, b: { x: mx, y: r - 5 } },
+            { a: { x: 4, y: r - 5 }, b: { x: c - 5, y: 4 } }
+          ]
+        };
+      }
+    },
+    {
+      id: 'quadring', name: '四门环阵',
+      desc: '四对传送门环绕中央，中心十字 + 四角障碍',
+      gen: function (c, r) {
+        var b = [];
+        var mx = (c - 1) >> 1, my = (r - 1) >> 1;
+        var armLen = Math.max(1, Math.round(Math.min(c, r) * 0.10));
+        for (var i = 1; i <= armLen; i++) {
+          b.push({ x: mx - i, y: my });
+          b.push({ x: mx + i, y: my });
+          b.push({ x: mx, y: my - i });
+          b.push({ x: mx, y: my + i });
+        }
+        var s = Math.max(1, Math.round(Math.min(c, r) * 0.08));
+        var o = 1;
+        var spots = [[o, o], [c - o - s, o], [o, r - o - s], [c - o - s, r - o - s]];
+        for (var k = 0; k < spots.length; k++) {
+          var sp = spots[k];
+          for (var y = sp[1]; y < sp[1] + s; y++)
+            for (var x = sp[0]; x < sp[0] + s; x++) b.push({ x: x, y: y });
+        }
+        var d = Math.max(3, Math.round(Math.min(c, r) * 0.20));
+        return {
+          blocks: b,
+          portals: [
+            { a: { x: mx - d, y: my }, b: { x: mx + d, y: my } },
+            { a: { x: mx, y: my - d }, b: { x: mx, y: my + d } },
+            { a: { x: mx - d, y: my - d }, b: { x: mx + d, y: my + d } },
+            { a: { x: mx + d, y: my - d }, b: { x: mx - d, y: my + d } }
+          ]
+        };
+      }
+    },
+    {
+      id: 'deathcross', name: '死亡十字',
+      desc: '巨型十字障碍 + 两对传送门',
+      gen: function (c, r) {
+        var b = [];
+        var mx = (c - 1) >> 1, my = (r - 1) >> 1;
+        var armLen = Math.max(3, Math.round(Math.min(c, r) * 0.35));
+        var gap = 2;
+        for (var y1 = my - armLen; y1 <= my - gap; y1++) {
+          b.push({ x: mx, y: y1 });
+          b.push({ x: mx - 1, y: y1 });
+        }
+        for (var y2 = my + gap; y2 <= my + armLen; y2++) {
+          b.push({ x: mx, y: y2 });
+          b.push({ x: mx - 1, y: y2 });
+        }
+        for (var x1 = mx - armLen; x1 <= mx - gap; x1++) {
+          b.push({ x: x1, y: my });
+          b.push({ x: x1, y: my - 1 });
+        }
+        for (var x2 = mx + gap; x2 <= mx + armLen; x2++) {
+          b.push({ x: x2, y: my });
+          b.push({ x: x2, y: my - 1 });
+        }
+        return {
+          blocks: b,
+          portals: [
+            { a: { x: 1, y: 1 }, b: { x: c - 2, y: r - 2 } },
+            { a: { x: c - 2, y: 1 }, b: { x: 1, y: r - 2 } }
+          ]
+        };
+      }
+    },
+    {
+      id: 'labyrinth', name: '迷宫长廊',
+      desc: '多道纵墙交错 + 一对传送门',
+      gen: function (c, r) {
+        var b = [];
+        var cols = [];
+        for (var x = 3; x < c - 2; x += 4) cols.push(x);
+        for (var i = 0; i < cols.length; i++) {
+          var xx = cols[i];
+          var gap = (i % 2 === 0) ? Math.floor(r * 0.20) : Math.floor(r * 0.66);
+          var gw = Math.max(2, Math.floor(r * 0.14));
+          for (var y = 1; y < r - 1; y++) {
+            if (y >= gap && y < gap + gw) continue;
+            b.push({ x: xx, y: y });
+          }
+        }
+        return {
+          blocks: b,
+          portals: [
+            { a: { x: 1, y: 1 }, b: { x: c - 2, y: r - 2 } }
+          ]
+        };
+      }
+    },
+    {
+      id: 'wormhole', name: '虫洞枢纽',
+      desc: '三对传送门 + 四角 L 形短墙',
+      gen: function (c, r) {
+        var b = [];
+        var mx = (c - 1) >> 1;
+        var L = Math.max(2, Math.round(Math.min(c, r) * 0.16));
+        for (var i = 0; i < L; i++) {
+          b.push({ x: 1 + i, y: 1 });
+          b.push({ x: 1, y: 1 + i });
+        }
+        for (var j = 0; j < L; j++) {
+          b.push({ x: c - 2 - j, y: 1 });
+          b.push({ x: c - 2, y: 1 + j });
+        }
+        for (var k = 0; k < L; k++) {
+          b.push({ x: 1 + k, y: r - 2 });
+          b.push({ x: 1, y: r - 2 - k });
+        }
+        for (var m = 0; m < L; m++) {
+          b.push({ x: c - 2 - m, y: r - 2 });
+          b.push({ x: c - 2, y: r - 2 - m });
+        }
+        return {
+          blocks: b,
+          portals: [
+            { a: { x: 3, y: 3 }, b: { x: c - 4, y: r - 4 } },
+            { a: { x: c - 4, y: 3 }, b: { x: 3, y: r - 4 } },
+            { a: { x: mx, y: 1 }, b: { x: mx, y: r - 2 } }
+          ]
+        };
+      }
+    }
+  ];
+
+  function getMap(id) {
+    for (var i = 0; i < MAPS.length; i++) if (MAPS[i].id === id) return MAPS[i];
+    return MAPS[0];
+  }
+
+  /* =========================================================
+     3. 存储 / 设置
+     ========================================================= */
+  var store = {
+    get: function (k, d) {
+      try { var v = localStorage.getItem('snake.' + k); return v === null ? d : JSON.parse(v); }
+      catch (e) { return d; }
+    },
+    set: function (k, v) {
+      try { localStorage.setItem('snake.' + k, JSON.stringify(v)); } catch (e) {}
+    }
+  };
+
+  var settings = {
+    speed:   store.get('speed', 'normal'),
+    size:    store.get('size', 20),
+    mapId:   store.get('map', 'empty'),
+    speedUp: store.get('speedUp', true)
+  };
+  if (!SPEED_PRESETS[settings.speed]) settings.speed = 'normal';
+  if ([15, 20, 25].indexOf(settings.size) < 0) settings.size = 20;
+  if (!MAPS.some(function (m) { return m.id === settings.mapId; })) settings.mapId = 'empty';
+  if (typeof settings.speedUp !== 'boolean') settings.speedUp = true;
+
+  var skinIdx = store.get('skin', 0);
+  if (skinIdx < 0 || skinIdx >= SKINS.length) skinIdx = 0;
+
+  function bestKey(mode, mapId, ai) {
+    return mode + '.' + mapId + '.' + (ai ? 'ai' : 'human');
+  }
+  function getBest(mode, mapId, ai) {
+    return store.get('best.' + bestKey(mode, mapId, ai), 0) || 0;
+  }
+  function setBest(mode, mapId, ai, v) {
+    store.set('best.' + bestKey(mode, mapId, ai), v);
+  }
+  // 该地图下所有组合里的最大分（用于主菜单显示）
+  function getMapBest(mapId) {
+    var modes = ['classic', 'timed'], ais = [false, true], m = 0;
+    for (var i = 0; i < modes.length; i++)
+      for (var j = 0; j < ais.length; j++) {
+        var v = getBest(modes[i], mapId, ais[j]);
+        if (v > m) m = v;
+      }
+    return m;
+  }
+
+  /* =========================================================
+     4. 画布
+     ========================================================= */
+  var canvas = $('cv');
+  var ctx = canvas.getContext('2d');
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  var bgCanvas = document.createElement('canvas');
+  var bgCtx = bgCanvas.getContext('2d');
+
+  var COLS = 20, ROWS = 20, TOTAL = 400, CELL = 24, W = 480, H = 480;
+  var barrier = new Uint8Array(TOTAL);
+  var portalAt = new Int32Array(TOTAL); portalAt.fill(-1);
+  var portalPair = new Int32Array(TOTAL); portalPair.fill(-1);
+  var portals = [];
+  var freeCells = TOTAL;
+
+  /* =========================================================
+     5. 游戏状态
+     ========================================================= */
+  var game = {
+    mode: 'classic',        // 'classic' | 'timed'
+    ai: false,
+    snake: [],
+    dir: { x: 1, y: 0 },
+    queue: [],
+    food: null,
+    score: 0,
+    apples: 0,
+    stepsSinceApple: 0,
+    items: [],
+    effects: { speed: 0, slow: 0, ghost: 0, x2: 0, shield: 0 },
+    timeLeft: 60,
+    itemTimer: ITEM_SPAWN_INTERVAL,
+    replay: null
+  };
+
+  var state = 'menu';
+  var acc = 0, lastTs = 0, time = 0, stepMs = 140;
+
+  /* 回放状态 */
+  var replayData = null;
+  var replayState = { playing: false, index: 0, acc: 0, frameMs: 80 };
+
+  /* =========================================================
+     6. 工具
+     ========================================================= */
+  function roundRect(c, x, y, w, h, r) {
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y,     x + w, y + h, r);
+    c.arcTo(x + w, y + h, x,     y + h, r);
+    c.arcTo(x,     y + h, x,     y,     r);
+    c.arcTo(x,     y,     x + w, y,     r);
+    c.closePath();
+  }
+  function idxOf(x, y) { return y * COLS + x; }
+  function wrapX(x) { return (x % COLS + COLS) % COLS; }
+  function wrapY(y) { return (y % ROWS + ROWS) % ROWS; }
+
+  function adjacentWrapped(ax, ay, bx, by) {
+    var dx = Math.abs(ax - bx); dx = Math.min(dx, COLS - dx);
+    var dy = Math.abs(ay - by); dy = Math.min(dy, ROWS - dy);
+    return (dx + dy) <= 1;
+  }
+
+  /* =========================================================
+     7. 离屏图标（道具 / logo 上的元素）
+     ========================================================= */
+  var itemIcons = {};
+
+  function makeItemIcon(type) {
+    var size = 48;
+    var d = Math.min(window.devicePixelRatio || 1, 2);
+    var cv = document.createElement('canvas');
+    cv.width = size * d;
+    cv.height = size * d;
+    var c = cv.getContext('2d');
+    c.setTransform(d, 0, 0, d, 0, 0);
+
+    var def = ITEM_DEFS[type];
+    var col = def.color;
+    var cx = size / 2, cy = size / 2;
+
+    /* 底盘 */
+    c.fillStyle = col + '26';
+    c.beginPath(); c.arc(cx, cy, 20, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = col; c.lineWidth = 2.2;
+    c.beginPath(); c.arc(cx, cy, 20, 0, Math.PI * 2); c.stroke();
+
+    c.fillStyle = col;
+    c.strokeStyle = col;
+    c.lineWidth = 2.6;
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+
+    if (type === 'speed') {
+      /* 闪电 */
+      c.beginPath();
+      c.moveTo(cx + 3.5, cy - 11);
+      c.lineTo(cx - 6, cy + 1);
+      c.lineTo(cx - 1, cy + 1);
+      c.lineTo(cx - 3.5, cy + 11);
+      c.lineTo(cx + 6, cy - 1);
+      c.lineTo(cx + 1, cy - 1);
+      c.closePath();
+      c.fill();
+    } else if (type === 'slow') {
+      /* 沙漏 */
+      c.beginPath();
+      c.moveTo(cx - 7, cy - 9);
+      c.lineTo(cx + 7, cy - 9);
+      c.lineTo(cx + 7, cy - 6);
+      c.lineTo(cx + 1.2, cy);
+      c.lineTo(cx + 7, cy + 6);
+      c.lineTo(cx + 7, cy + 9);
+      c.lineTo(cx - 7, cy + 9);
+      c.lineTo(cx - 7, cy + 6);
+      c.lineTo(cx - 1.2, cy);
+      c.lineTo(cx - 7, cy - 6);
+      c.closePath();
+      c.stroke();
+    } else if (type === 'ghost') {
+      /* 幽灵 */
+      c.beginPath();
+      c.arc(cx, cy - 2, 9, Math.PI, 0);
+      c.lineTo(cx + 9, cy + 8);
+      var n = 3, w = 18 / n;
+      for (var i = 0; i < n; i++) {
+        var x1 = cx + 9 - w * (i + 0.5);
+        var x2 = cx + 9 - w * (i + 1);
+        var cyy = (i % 2 === 0) ? cy + 4.5 : cy + 8;
+        c.quadraticCurveTo(x1, cyy, x2, cy + 8);
+      }
+      c.closePath();
+      c.fill();
+      /* 挖眼睛 */
+      c.globalCompositeOperation = 'destination-out';
+      c.beginPath();
+      c.arc(cx - 3.4, cy - 2, 1.9, 0, Math.PI * 2);
+      c.arc(cx + 3.4, cy - 2, 1.9, 0, Math.PI * 2);
+      c.fill();
+      c.globalCompositeOperation = 'source-over';
+    } else if (type === 'short') {
+      /* 剪刀 */
+      c.beginPath();
+      c.moveTo(cx - 7.5, cy - 9);
+      c.lineTo(cx + 4.5, cy + 2.5);
+      c.moveTo(cx + 7.5, cy - 9);
+      c.lineTo(cx - 4.5, cy + 2.5);
+      c.stroke();
+      c.beginPath();
+      c.arc(cx - 5.5, cy + 6.5, 3, 0, Math.PI * 2);
+      c.stroke();
+      c.beginPath();
+      c.arc(cx + 5.5, cy + 6.5, 3, 0, Math.PI * 2);
+      c.stroke();
+    } else if (type === 'x2') {
+      /* ×2 */
+      c.font = 'bold 20px system-ui,-apple-system,sans-serif';
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText('×2', cx, cy + 1);
+    } else if (type === 'shield') {
+      /* 盾牌 */
+      c.beginPath();
+      c.moveTo(cx, cy - 10);
+      c.lineTo(cx + 8, cy - 6);
+      c.lineTo(cx + 8, cy + 2);
+      c.quadraticCurveTo(cx + 8, cy + 9, cx, cy + 11);
+      c.quadraticCurveTo(cx - 8, cy + 9, cx - 8, cy + 2);
+      c.lineTo(cx - 8, cy - 6);
+      c.closePath();
+      c.fill();
+      c.strokeStyle = '#0b1017';
+      c.lineWidth = 2.6;
+      c.beginPath();
+      c.moveTo(cx - 4, cy);
+      c.lineTo(cx - 1, cy + 3.5);
+      c.lineTo(cx + 4.5, cy - 4.5);
+      c.stroke();
+    } else if (type === 'time') {
+      /* 时钟 */
+      c.beginPath();
+      c.arc(cx, cy, 9, 0, Math.PI * 2);
+      c.stroke();
+      c.beginPath();
+      c.moveTo(cx, cy);
+      c.lineTo(cx, cy - 5.5);
+      c.moveTo(cx, cy);
+      c.lineTo(cx + 4.5, cy + 1.5);
+      c.stroke();
+    }
+
+    return cv;
+  }
+
+  function initItemIcons() {
+    for (var k in ITEM_DEFS) itemIcons[k] = makeItemIcon(k);
+  }
+
+  /* =========================================================
+     8. 屏幕切换
+     ========================================================= */
+  var screens = {
+    menu: $('scr-menu'),
+    settings: $('scr-settings'),
+    maps: $('scr-maps'),
+    intro: $('scr-intro'),
+    game: $('scr-game')
+  };
+  function showScreen(name) {
+    for (var k in screens) screens[k].classList.toggle('active', k === name);
+  }
+
+  /* =========================================================
+     9. 棋盘构建
+     ========================================================= */
+  function buildBoard() {
+    COLS = settings.size;
+    ROWS = settings.size;
+    TOTAL = COLS * ROWS;
+    CELL = 24;
+    W = COLS * CELL;
+    H = ROWS * CELL;
+
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    bgCanvas.width  = W * dpr;
+    bgCanvas.height = H * dpr;
+    bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    barrier = new Uint8Array(TOTAL);
+    portalAt = new Int32Array(TOTAL); portalAt.fill(-1);
+    portalPair = new Int32Array(TOTAL); portalPair.fill(-1);
+    portals = [];
+
+    var map = getMap(settings.mapId);
+    var res = map.gen(COLS, ROWS) || {};
+    var blocks = res.blocks || [];
+    var pairs = res.portals || [];
+    var occupied = new Uint8Array(TOTAL);
+
+    for (var i = 0; i < blocks.length; i++) {
+      var p = blocks[i];
+      if (p.x < 0 || p.x >= COLS || p.y < 0 || p.y >= ROWS) continue;
+      var k = p.y * COLS + p.x;
+      if (!barrier[k]) { barrier[k] = 1; occupied[k] = 1; }
+    }
+
+    for (var j = 0; j < pairs.length; j++) {
+      var pr = pairs[j];
+      if (!pr || !pr.a || !pr.b) continue;
+      var ax = pr.a.x, ay = pr.a.y, bx = pr.b.x, by = pr.b.y;
+      if (ax < 0 || ax >= COLS || ay < 0 || ay >= ROWS) continue;
+      if (bx < 0 || bx >= COLS || by < 0 || by >= ROWS) continue;
+      var ai = ay * COLS + ax, bi = by * COLS + bx;
+      if (ai === bi || occupied[ai] || occupied[bi]) continue;
+      if (adjacentWrapped(ax, ay, bx, by)) continue;
+      occupied[ai] = 1; occupied[bi] = 1;
+      portalAt[ai] = j; portalAt[bi] = j;
+      portalPair[ai] = bi; portalPair[bi] = ai;
+      portals.push({
+        a: { x: ax, y: ay }, b: { x: bx, y: by },
+        color: PORTAL_COLORS[j % PORTAL_COLORS.length]
+      });
+    }
+
+    var bc = 0;
+    for (var q = 0; q < TOTAL; q++) if (barrier[q]) bc++;
+    freeCells = TOTAL - bc;
+
+    bakeBackground();
+  }
+
+  function bakeBackground() {
+    bgCtx.clearRect(0, 0, W, H);
+    bgCtx.fillStyle = '#0e1621';
+    bgCtx.fillRect(0, 0, W, H);
+
+    bgCtx.fillStyle = 'rgba(255,255,255,.018)';
+    for (var y = 0; y < ROWS; y++)
+      for (var x = 0; x < COLS; x++)
+        if ((x + y) % 2 === 0) bgCtx.fillRect(x * CELL, y * CELL, CELL, CELL);
+
+    for (var i = 0; i < TOTAL; i++) {
+      if (!barrier[i]) continue;
+      var bx = (i % COLS) * CELL;
+      var by = ((i / COLS) | 0) * CELL;
+      bgCtx.fillStyle = '#2b3d52';
+      roundRect(bgCtx, bx + 1, by + 1, CELL - 2, CELL - 2, 4);
+      bgCtx.fill();
+      bgCtx.fillStyle = 'rgba(130,180,230,.13)';
+      roundRect(bgCtx, bx + 2, by + 2, CELL - 4, CELL * 0.38, 3);
+      bgCtx.fill();
+    }
+  }
+
+  /* =========================================================
+     10. 出生点 / 食物 / 道具位置
+     ========================================================= */
+    function findSpawn() {
+    var cx = (COLS - 1) / 2, cy = (ROWS - 1) / 2;
+    var bestP = null, bestD = Infinity;
+
+    // 从宽到严，逐级降级查找，保证一定能找到合法出生点
+    var CLEAR_LEVELS = [5, 3, 1];
+
+    for (var L = 0; L < CLEAR_LEVELS.length; L++) {
+      var clear = CLEAR_LEVELS[L];
+      bestP = null;
+      bestD = Infinity;
+
+      for (var y = 0; y < ROWS; y++) {
+        for (var x = 2; x < COLS; x++) {
+          var ok = true;
+          // 蛇身 3 格（x-2, x-1, x）+ 头前方 clear 格（x+1 ~ x+clear）
+          for (var k = -2; k <= clear; k++) {
+            var xx = x + k;
+            if (xx < 0 || xx >= COLS) { ok = false; break; }
+            var ii = y * COLS + xx;
+            if (barrier[ii] || portalAt[ii] >= 0) { ok = false; break; }
+          }
+          if (!ok) continue;
+
+          var dx = x - cx, dy = y - cy;
+          var d = dx * dx + dy * dy;
+          if (d < bestD) { bestD = d; bestP = { x: x, y: y }; }
+        }
+      }
+      if (bestP) return bestP;   // 找到就返回
+    }
+
+    // 终极兜底：只要蛇身 3 格空即可（极密地图）
+    for (var y2 = 0; y2 < ROWS; y2++) {
+      for (var x2 = 2; x2 < COLS; x2++) {
+        var i0 = y2 * COLS + x2, i1 = i0 - 1, i2 = i0 - 2;
+        if (!barrier[i0] && !barrier[i1] && !barrier[i2]) return { x: x2, y: y2 };
+      }
+    }
+    return { x: 2, y: 0 };
+  }
+
+    function placeFood() {
+    var occ = new Uint8Array(TOTAL);
+    for (var i = 0; i < game.snake.length; i++)
+      occ[idxOf(game.snake[i].x, game.snake[i].y)] = 1;
+    for (var j = 0; j < TOTAL; j++) {
+      if (barrier[j]) occ[j] = 1;
+      if (portalAt[j] >= 0) occ[j] = 1;
+    }
+    for (var m = 0; m < game.items.length; m++)
+      occ[idxOf(game.items[m].x, game.items[m].y)] = 1;
+
+    // 1. 先收集所有「空闲格」
+    var candidates = [];
+    for (var k = 0; k < TOTAL; k++) if (!occ[k]) candidates.push(k);
+
+    if (candidates.length === 0) { game.food = null; return; }
+
+    // 2. 从蛇头做一次 BFS，得到「当前可达」的距离场
+    //    蛇身算阻挡（最后一节尾巴除外，它马上会让开）
+    var blocked = new Uint8Array(TOTAL);
+    for (var s = 0; s < game.snake.length - 1; s++)
+      blocked[idxOf(game.snake[s].x, game.snake[s].y)] = 1;
+    var headIdx = idxOf(game.snake[0].x, game.snake[0].y);
+    var dist = bfs(headIdx, blocked);
+
+    // 3. 只保留可达的候选
+    var reachable = [];
+    for (var q = 0; q < candidates.length; q++) {
+      if (dist[candidates[q]] >= 0) reachable.push(candidates[q]);
+    }
+
+    // 4. 可达的就从可达里选；万一全被围死，退回全候选（避免 null）
+    var pool = reachable.length > 0 ? reachable : candidates;
+    var idx = pool[(Math.random() * pool.length) | 0];
+    game.food = { x: idx % COLS, y: (idx / COLS) | 0 };
+  }
+
+  function findFreeCell() {
+    var occ = new Uint8Array(TOTAL);
+    for (var i = 0; i < game.snake.length; i++)
+      occ[idxOf(game.snake[i].x, game.snake[i].y)] = 1;
+    for (var j = 0; j < TOTAL; j++) {
+      if (barrier[j]) occ[j] = 1;
+      if (portalAt[j] >= 0) occ[j] = 1;
+    }
+    if (game.food) occ[idxOf(game.food.x, game.food.y)] = 1;
+    for (var m = 0; m < game.items.length; m++)
+      occ[idxOf(game.items[m].x, game.items[m].y)] = 1;
+
+    var free = [];
+    for (var k = 0; k < TOTAL; k++) if (!occ[k]) free.push(k);
+    if (free.length === 0) return null;
+    var idx = free[(Math.random() * free.length) | 0];
+    return { x: idx % COLS, y: (idx / COLS) | 0 };
+  }
+
+  /* =========================================================
+     11. 重置 / 开始
+     ========================================================= */
+  function resetGame(mode, aiOn) {
+    buildBoard();
+
+    var sp = findSpawn();
+    game.mode = mode;
+    game.ai = !!aiOn;
+    game.snake = [
+      { x: sp.x,     y: sp.y },
+      { x: sp.x - 1, y: sp.y },
+      { x: sp.x - 2, y: sp.y }
+    ];
+    game.dir = { x: 1, y: 0 };
+    game.queue = [];
+    game.score = 0;
+    game.apples = 0;
+    game.stepsSinceApple = 0;
+    game.items = [];
+    game.effects = { speed: 0, slow: 0, ghost: 0, x2: 0, shield: 0 };
+    game.timeLeft = 60;
+    game.itemTimer = ITEM_SPAWN_INTERVAL;
+    acc = 0;
+    stepMs = SPEED_PRESETS[settings.speed].base;
+
+    placeFood();
+
+    /* 初始化回放数据 */
+    game.replay = {
+      mode: mode,
+      ai: !!aiOn,
+      frames: [],
+      finalScore: 0,
+      apples: 0,
+      size: settings.size,
+      mapId: settings.mapId
+    };
+    recordFrame();
+
+    updateHUD();
+    updateEffRow();
+
+    /* HUD 显示模式 */
+    $('timeHud').style.display = (mode === 'timed') ? 'block' : 'none';
+    $('lenHud').style.display = '';
+    $('btnPause').style.display = (mode === 'timed') ? 'none' : '';
+    $('btnAI').style.display = '';
+    $('btnAI').textContent = 'AI 托管：' + (game.ai ? '开' : '关');
+    $('btnAI').classList.toggle('active', game.ai);
+    $('btnAI').disabled = true;
+    $('btnAI').style.opacity = '0.55';
+    $('btnAI').style.cursor = 'default';
+  }
+
+  function updateHUD() {
+    $('score').textContent = game.score;
+    $('len').textContent = game.snake.length;
+    $('best').textContent = getBest(game.mode, settings.mapId, game.ai);
+    $('timeLeft').textContent = Math.ceil(Math.max(0, game.timeLeft));
+    var tEl = $('timeLeft');
+    tEl.parentNode.classList.toggle('danger', game.timeLeft <= 10);
+  }
+
+  function updateEffRow() {
+    var row = $('effRow');
+    row.innerHTML = '';
+    var e = game.effects;
+
+    function chip(text, color) {
+      var el = document.createElement('span');
+      el.className = 'eff-chip';
+      el.textContent = text;
+      el.style.background = color + '26';
+      el.style.color = color;
+      el.style.boxShadow = '0 0 0 1px ' + color + '55';
+      row.appendChild(el);
+    }
+
+    if (e.speed > 0)  chip('加速 ' + (e.speed / 1000).toFixed(1) + 's', ITEM_DEFS.speed.color);
+    if (e.slow > 0)   chip('减速 ' + (e.slow / 1000).toFixed(1) + 's', ITEM_DEFS.slow.color);
+    if (e.ghost > 0)  chip('幽灵 ' + (e.ghost / 1000).toFixed(1) + 's', ITEM_DEFS.ghost.color);
+    if (e.x2 > 0)     chip('双倍 ' + (e.x2 / 1000).toFixed(1) + 's', ITEM_DEFS.x2.color);
+    if (e.shield > 0) chip('护盾 ×1', ITEM_DEFS.shield.color);
+  }
+
+  /* =========================================================
+     12. 游戏流程
+     ========================================================= */
+  function showOverlay(title, html, btnText, showReplay) {
+    $('ovTitle').textContent = title;
+    $('ovText').innerHTML = html;
+    $('ovBtn').textContent = btnText;
+    $('ovReplayBtn').style.display = showReplay ? '' : 'none';
+    $('overlay').classList.remove('hidden');
+  }
+  function hideOverlay() { $('overlay').classList.add('hidden'); }
+
+  function startGame(mode, aiOn) {
+    showScreen('game');
+    resetGame(mode, aiOn);
+    state = 'running';
+    hideOverlay();
+    $('replayBar').style.display = 'none';
+    $('gameControls').style.display = '';
+    $('tip').textContent = IS_MOBILE
+      ? '滑动棋盘转向 · 轻触暂停 · 边界可穿越'
+      : '方向键 / WASD 转向 · 空格暂停 · 边界可穿越';
+  }
+
+  function endClassic(reason) {
+    state = 'over';
+    if (game.score > getBest('classic', settings.mapId, game.ai)) {
+      setBest('classic', settings.mapId, game.ai, game.score);
+      updateMenuMeta();
+    }
+    game.replay.finalScore = game.score;
+    game.replay.apples = game.apples;
+    showOverlay(
+      '游戏结束',
+      (reason ? reason + '<br>' : '') +
+      '本局得分 <b style="color:#4ade80">' + game.score + '</b>　长度 ' + game.snake.length +
+      '<br>共吃 ' + game.apples + ' 个果实',
+      '重新开始',
+      true
+    );
+  }
+
+  function endTimed() {
+    state = 'over';
+    var isNew = game.score > getBest('timed', settings.mapId, game.ai);
+    if (isNew) {
+      setBest('timed', settings.mapId, game.ai, game.score);
+      updateMenuMeta();
+    }
+    game.replay.finalScore = game.score;
+    game.replay.apples = game.apples;
+    showOverlay(
+      '时间到',
+      '得分 <b style="color:#4ade80">' + game.score + '</b>' +
+      (isNew ? '　<b style="color:#fbbf24">新纪录！</b>' : '') +
+      '<br>共吃 ' + game.apples + ' 个果实　长度 ' + game.snake.length +
+      '<br>本局操控：<b>' + (game.ai ? 'AI 托管' : '手动操控') + '</b>',
+      '再来一局',
+      true
+    );
+  }
+
+  function pauseGame() {
+    if (state !== 'running') return;
+    if (game.mode === 'timed') return;   // 限时模式不能手动暂停
+    state = 'paused';
+    showOverlay('已暂停', '点击继续或按空格恢复', '继续', false);
+  }
+  function resumeGame() {
+    if (state !== 'paused') return;
+    state = 'running';
+    hideOverlay();
+  }
+
+  /* =========================================================
+     13. 道具刷新 / 拾取
+     ========================================================= */
+  function trySpawnItem() {
+    if (game.items.length >= ITEM_MAX_ON_BOARD) return;
+    var pool = ['speed', 'slow', 'ghost', 'short', 'x2', 'shield'];
+    if (game.mode === 'timed') pool.push('time');
+    var type = pool[(Math.random() * pool.length) | 0];
+    var pos = findFreeCell();
+    if (!pos) return;
+    game.items.push({
+      x: pos.x, y: pos.y, type: type,
+      lifeLeft: ITEM_DEFS[type].life
+    });
+  }
+
+  function pickItem(item) {
+    var t = item.type;
+    if (t === 'speed')       game.effects.speed = ITEM_DEFS.speed.dur;
+    else if (t === 'slow')   game.effects.slow  = ITEM_DEFS.slow.dur;
+    else if (t === 'ghost')  game.effects.ghost = ITEM_DEFS.ghost.dur;
+    else if (t === 'x2')     game.effects.x2    = ITEM_DEFS.x2.dur;
+    else if (t === 'shield') game.effects.shield = 1;
+    else if (t === 'short') {
+      var cut = Math.min(5, game.snake.length - 1);
+      for (var i = 0; i < cut; i++) game.snake.pop();
+    } else if (t === 'time') {
+      game.timeLeft += 5;
+    }
+    updateEffRow();
+  }
+
+  /* =========================================================
+     14. 计时器
+     ========================================================= */
+  function updateTimers(dt) {
+    var e = game.effects;
+    var dirty = false;
+    if (e.speed > 0)  { e.speed  = Math.max(0, e.speed  - dt); dirty = true; }
+    if (e.slow > 0)   { e.slow   = Math.max(0, e.slow   - dt); dirty = true; }
+    if (e.ghost > 0)  { e.ghost  = Math.max(0, e.ghost  - dt); dirty = true; }
+    if (e.x2 > 0)     { e.x2     = Math.max(0, e.x2     - dt); dirty = true; }
+    if (dirty) updateEffRow();
+
+    for (var i = game.items.length - 1; i >= 0; i--) {
+      game.items[i].lifeLeft -= dt;
+      if (game.items[i].lifeLeft <= 0) game.items.splice(i, 1);
+    }
+
+    if (state === 'running') {
+      game.itemTimer -= dt;
+      if (game.itemTimer <= 0) {
+        game.itemTimer = ITEM_SPAWN_INTERVAL;
+        trySpawnItem();
+      }
+      if (game.mode === 'timed') {
+        game.timeLeft -= dt / 1000;
+        if (game.timeLeft <= 0) {
+          game.timeLeft = 0;
+          updateHUD();
+          endTimed();
+          return;
+        }
+        updateHUD();
+      }
+    }
+  }
+
+  /* =========================================================
+     15. 有效步长
+     ========================================================= */
+  function getBaseStepMs() {
+    var p = SPEED_PRESETS[settings.speed];
+    if (!settings.speedUp) return p.base;
+    var tier = Math.floor(game.apples / 5);
+    var maxTier = 5;
+    var dec = Math.min(tier, maxTier) / maxTier;
+    return p.base - (p.base - p.min) * dec;
+  }
+  function getEffectiveStepMs() {
+    var base = getBaseStepMs();
+    if (game.effects.speed > 0) base *= 0.55;
+    if (game.effects.slow  > 0) base *= 1.80;
+    return base;
+  }
+
+  /* =========================================================
+     16. 得分函数
+        走 1 格 → 100 分；走 ≥ 100 格 → 5 分；中间线性
+     ========================================================= */
+  function calcAppleScore(steps) {
+    if (steps <= 1) return 100;
+    if (steps >= 100) return 5;
+    return Math.round(100 - (steps - 1) * 95 / 99);
+  }
+
+  /* =========================================================
+     17. 核心步进
+     ========================================================= */
+  function stepGame() {
+    /* AI 决策 */
+    if (game.ai) {
+      var nd = aiDecide();
+      game.queue.length = 0;
+      if (nd) game.dir = nd;
+    } else if (game.queue.length) {
+      game.dir = game.queue.shift();
+    }
+
+    var nx = wrapX(game.snake[0].x + game.dir.x);
+    var ny = wrapY(game.snake[0].y + game.dir.y);
+    var ni = ny * COLS + nx;
+
+    /* 障碍 */
+    if (barrier[ni]) {
+      if (game.effects.shield > 0) {
+        game.effects.shield = 0;
+        updateEffRow();
+        return;   // 这一步作废，蛇头不动
+      }
+      return endClassic('撞上了障碍物');
+    }
+
+    /* 传送门 */
+    if (portalPair[ni] >= 0) {
+      ni = portalPair[ni];
+      nx = ni % COLS;
+      ny = (ni / COLS) | 0;
+    }
+
+    var eating = !!(game.food && nx === game.food.x && ny === game.food.y);
+    var ghostOn = game.effects.ghost > 0;
+
+    /* 撞自己 */
+    if (!ghostOn) {
+      var limit = eating ? game.snake.length : game.snake.length - 1;
+      for (var i = 0; i < limit; i++) {
+        if (game.snake[i].x === nx && game.snake[i].y === ny) {
+          if (game.effects.shield > 0) {
+            game.effects.shield = 0;
+            updateEffRow();
+            return;
+          }
+          return endClassic('咬到了自己');
+        }
+      }
+    }
+
+    game.snake.unshift({ x: nx, y: ny });
+    game.stepsSinceApple++;
+
+    /* 拾取道具 */
+    for (var k = game.items.length - 1; k >= 0; k--) {
+      if (game.items[k].x === nx && game.items[k].y === ny) {
+        var it = game.items[k];
+        game.items.splice(k, 1);
+        pickItem(it);
+      }
+    }
+
+    /* 吃食物 */
+    if (eating) {
+      var pts = calcAppleScore(game.stepsSinceApple);
+      if (game.effects.x2 > 0) pts *= 2;
+      game.score += pts;
+      game.apples++;
+      game.stepsSinceApple = 0;
+      placeFood();
+      if (!game.food) {
+        updateHUD();
+        recordFrame();
+        return endClassic('完美通关！填满了整个棋盘');
+      }
+    } else {
+      game.snake.pop();
+    }
+
+    /* 幽灵穿过自身时移除重叠 */
+    if (ghostOn) {
+      var seen = {};
+      var out = [];
+      for (var s = 0; s < game.snake.length; s++) {
+        var key = game.snake[s].y * COLS + game.snake[s].x;
+        if (seen[key] && s > 0) continue;
+        seen[key] = 1;
+        out.push(game.snake[s]);
+      }
+      game.snake = out;
+    }
+
+    updateHUD();
+    recordFrame();
+  }
+
+  /* =========================================================
+     18. 回放录制
+     ========================================================= */
+  function recordFrame() {
+    if (!game.replay) return;
+    if (game.replay.frames.length > 12000) return;
+    var frame = {
+      s: [],
+      f: game.food ? [game.food.x, game.food.y] : null,
+      it: [],
+      sc: game.score,
+      ap: game.apples,
+      t: game.timeLeft,
+      e: {
+        speed: game.effects.speed,
+        ghost: game.effects.ghost,
+        x2: game.effects.x2,
+        shield: game.effects.shield
+      }
+    };
+    for (var i = 0; i < game.snake.length; i++)
+      frame.s.push(game.snake[i].x, game.snake[i].y);
+    for (var j = 0; j < game.items.length; j++)
+      frame.it.push(game.items[j].x, game.items[j].y, game.items[j].type);
+    game.replay.frames.push(frame);
+  }
+
+  /* =========================================================
+     19. AI
+     ========================================================= */
+  function bfs(startIdx, blocked) {
+    var dist = new Int32Array(TOTAL); dist.fill(-1);
+    var q = new Int32Array(TOTAL);
+    var qh = 0, qt = 0;
+    dist[startIdx] = 0;
+    q[qt++] = startIdx;
+
+    while (qh < qt) {
+      var cur = q[qh++];
+      var cx = cur % COLS;
+      var cy = (cur / COLS) | 0;
+      var nd = dist[cur] + 1;
+
+      for (var k = 0; k < 4; k++) {
+        var nx = (cx + DIRS4[k].x + COLS) % COLS;
+        var ny = (cy + DIRS4[k].y + ROWS) % ROWS;
+        var ni = ny * COLS + nx;
+
+        if (barrier[ni]) continue;
+        var land = ni;
+        if (portalPair[ni] >= 0) land = portalPair[ni];
+        if (blocked[land]) continue;
+        if (dist[land] !== -1) continue;
+        dist[land] = nd;
+        q[qt++] = land;
+      }
+    }
+    return dist;
+  }
+
+  function tailReachable(body) {
+    if (body.length <= 3) return true;
+    var blocked = new Uint8Array(TOTAL);
+    for (var i = 0; i < TOTAL; i++) if (barrier[i]) blocked[i] = 1;
+    for (var j = 0; j < body.length - 1; j++)
+      blocked[idxOf(body[j].x, body[j].y)] = 1;
+    var headIdx = idxOf(body[0].x, body[0].y);
+    var tailIdx = idxOf(body[body.length - 1].x, body[body.length - 1].y);
+    var dist = bfs(headIdx, blocked);
+    return dist[tailIdx] >= 0;
+  }
+
+  function aiDecide() {
+    var head = game.snake[0];
+    var foodIdx = game.food ? idxOf(game.food.x, game.food.y) : -1;
+    var freeSpace = freeCells - game.snake.length;
+    var cands = [];
+    var hasShield = game.effects.shield > 0;
+
+    for (var k = 0; k < 4; k++) {
+      var d = DIRS4[k];
+      if (d.x === -game.dir.x && d.y === -game.dir.y) continue;
+
+      var nx = wrapX(head.x + d.x);
+      var ny = wrapY(head.y + d.y);
+      var ni = ny * COLS + nx;
+      if (barrier[ni]) continue;
+
+      var land = ni;
+      if (portalPair[ni] >= 0) land = portalPair[ni];
+      var lx = land % COLS;
+      var ly = (land / COLS) | 0;
+
+      var eating = !!(game.food && lx === game.food.x && ly === game.food.y);
+
+      var limit = eating ? game.snake.length : game.snake.length - 1;
+      var hit = false;
+      for (var i = 0; i < limit; i++) {
+        if (game.snake[i].x === lx && game.snake[i].y === ly) { hit = true; break; }
+      }
+      if (hit) continue;
+
+      var newBody = [{ x: lx, y: ly }];
+      var keep = eating ? game.snake.length : game.snake.length - 1;
+      for (var m = 0; m < keep; m++) newBody.push(game.snake[m]);
+
+      var safe = hasShield || tailReachable(newBody);
+
+      var blocked = new Uint8Array(TOTAL);
+      for (var b = 0; b < TOTAL; b++) if (barrier[b]) blocked[b] = 1;
+      for (var e = 0; e < newBody.length - 1; e++)
+        blocked[idxOf(newBody[e].x, newBody[e].y)] = 1;
+      var dist = bfs(land, blocked);
+
+      var space = 0;
+      for (var s = 0; s < TOTAL; s++) if (dist[s] >= 0) space++;
+
+      var distFood = eating ? 0 : (foodIdx >= 0 ? dist[foodIdx] : -1);
+
+      // ★ 找这个方向上最值得去的道具
+      var itemScore = 0, itemDist = -1, itemType = null;
+      for (var q = 0; q < game.items.length; q++) {
+        var it = game.items[q];
+        var id = dist[idxOf(it.x, it.y)];
+        if (id < 0 || id > 25) continue;           // 太远的忽略
+
+        var w = ITEM_WEIGHTS[it.type] || 0;
+
+        // 剩余寿命折扣：快过期的打 3.5 折
+        var lifeRatio = it.lifeLeft / ITEM_DEFS[it.type].life;
+        if (lifeRatio < 0.3) w *= 0.35;
+
+        // 限时模式：剩余时间越少，加时道具越值钱
+        if (game.mode === 'timed' && it.type === 'time') {
+          w *= Math.max(1, 30 / Math.max(1, game.timeLeft));
+        }
+
+        // 局势相关加权
+        if (it.type === 'short'  && game.snake.length > 40) w *= 1.8;
+        if (it.type === 'shield' && game.snake.length > 30) w *= 1.5;
+        if (it.type === 'ghost'  && freeSpace < 60)          w *= 1.6;
+
+        // 距离衰减
+        var s2 = w * (1 - id / 25);
+        if (s2 > itemScore) {
+          itemScore = s2;
+          itemDist = id;
+          itemType = it.type;
+        }
+      }
+
+      cands.push({
+        d: d, eating: eating, safe: safe, space: space, distFood: distFood,
+        itemScore: itemScore, itemDist: itemDist, itemType: itemType
+      });
+    }
+
+    if (cands.length === 0) return null;
+
+    var bestC = null, bestS = -Infinity;
+    for (var t = 0; t < cands.length; t++) {
+      var c = cands[t];
+      var sc = 0;
+      if (c.safe) sc += 1e6;
+      if (c.eating) sc += 5e5;
+      if (freeSpace < 60) {
+        sc += c.space * 300;
+      } else {
+        if (c.distFood >= 0) sc += (300 - Math.min(c.distFood, 300)) * 40;
+        else sc -= 20000;
+
+        // ★ 道具加分：权重按距离衰减，系数与食物同一量级
+        if (c.itemDist >= 0) sc += c.itemScore * 40;
+
+        sc += c.space * 6;
+      }
+      if (sc > bestS) { bestS = sc; bestC = c; }
+    }
+    return bestC ? bestC.d : null;
+  }
+
+  /* =========================================================
+     20. 渲染
+     ========================================================= */
+  function drawPortalRing(cx, cy, color, now) {
+    var R = CELL * 0.38;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.78;
+    ctx.setLineDash([CELL * 0.16, CELL * 0.14]);
+    ctx.lineDashOffset = -(now / 90);
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+
+    var pulse = 0.5 + 0.5 * Math.sin(now / 320);
+    ctx.globalAlpha = 0.3 + 0.5 * pulse;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx, cy, R * 0.55, 0, Math.PI * 2); ctx.stroke();
+
+    ctx.globalAlpha = 0.3 + 0.55 * pulse;
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(cx, cy, R * 0.22, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPortal(p, now) {
+    drawPortalRing(p.a.x * CELL + CELL / 2, p.a.y * CELL + CELL / 2, p.color, now);
+    drawPortalRing(p.b.x * CELL + CELL / 2, p.b.y * CELL + CELL / 2, p.color, now);
+  }
+
+  function drawFood(fx0, fy0, now) {
+    var fx = fx0 * CELL + CELL / 2;
+    var fy = fy0 * CELL + CELL / 2;
+    var pulse = 1 + Math.sin(now / 220) * 0.08;
+    var r = CELL * 0.32 * pulse;
+
+    var glow = ctx.createRadialGradient(fx, fy, 1, fx, fy, r * 2.8);
+    glow.addColorStop(0, 'rgba(248,113,113,.55)');
+    glow.addColorStop(1, 'rgba(248,113,113,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(fx, fy, r * 2.8, 0, Math.PI * 2); ctx.fill();
+
+    ctx.fillStyle = '#f87171';
+    ctx.beginPath(); ctx.arc(fx, fy, r, 0, Math.PI * 2); ctx.fill();
+
+    ctx.fillStyle = 'rgba(255,255,255,.65)';
+    ctx.beginPath(); ctx.arc(fx - r * 0.32, fy - r * 0.32, r * 0.22, 0, Math.PI * 2); ctx.fill();
+  }
+
+  function drawItem(ix, iy, type, lifeLeft, now) {
+    var icon = itemIcons[type];
+    if (!icon) return;
+    var def = ITEM_DEFS[type];
+    var size = CELL * 1.15;
+    var pad = (CELL - size) / 2;
+    var alpha = 1;
+
+    /* 即将消失时闪烁 */
+    if (lifeLeft < 2500) {
+      alpha = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(now / 90));
+    }
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(icon, ix * CELL + pad, iy * CELL + pad, size, size);
+    ctx.restore();
+  }
+
+  function drawSnakeArr(snakeArr, dirObj, effectsObj) {
+    var skin = SKINS[skinIdx] || SKINS[0];
+    var n = snakeArr.length;
+    var ghostOn = effectsObj && effectsObj.ghost > 0;
+
+    if (ghostOn) ctx.globalAlpha = 0.62;
+
+    for (var i = n - 1; i >= 0; i--) {
+      var s = snakeArr[i];
+      var t = n > 1 ? i / (n - 1) : 0;
+      var pad = 1.5;
+      ctx.fillStyle = (i === 0) ? skin.head : skin.body(t);
+      roundRect(ctx,
+        s.x * CELL + pad, s.y * CELL + pad,
+        CELL - pad * 2, CELL - pad * 2,
+        i === 0 ? 7 : 5);
+      ctx.fill();
+    }
+
+    if (n && dirObj) {
+      var h = snakeArr[0];
+      var cx = h.x * CELL + CELL / 2;
+      var cy = h.y * CELL + CELL / 2;
+      var ex = dirObj.x * 2.6, ey = dirObj.y * 2.6;
+      var px = dirObj.x === 0 ? 4 : 0;
+      var py = dirObj.y === 0 ? 4 : 0;
+      ctx.fillStyle = skin.eye || '#062b16';
+      ctx.beginPath(); ctx.arc(cx + ex + px, cy + ey + py, 2.2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx + ex - px, cy + ey - py, 2.2, 0, Math.PI * 2); ctx.fill();
+    }
+
+    ctx.globalAlpha = 1;
+  }
+
+  /* 从一帧渲染（用于回放） */
+  function renderFrame(frame, now) {
+    ctx.drawImage(bgCanvas, 0, 0, W, H);
+
+    var flow = (now / 1400) % 1;
+    ctx.save();
+    ctx.globalAlpha = 0.22;
+    ctx.strokeStyle = '#22d3ee';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([CELL * 0.6, CELL * 0.9]);
+    ctx.lineDashOffset = -flow * CELL * 3;
+    ctx.strokeRect(1, 1, W - 2, H - 2);
+    ctx.restore();
+
+    for (var i = 0; i < portals.length; i++) drawPortal(portals[i], now);
+
+    if (frame.f) drawFood(frame.f[0], frame.f[1], now);
+
+    for (var j = 0; j < frame.it.length; j += 3) {
+      var ix = frame.it[j], iy = frame.it[j + 1], ty = frame.it[j + 2];
+      drawItem(ix, iy, ty, 9999, now);
+    }
+
+    /* 从坐标数组还原蛇 */
+    var arr = [];
+    for (var k = 0; k < frame.s.length; k += 2)
+      arr.push({ x: frame.s[k], y: frame.s[k + 1] });
+
+    /* 推断方向 */
+    var dd = { x: 1, y: 0 };
+    if (arr.length >= 2) {
+      var dx = arr[0].x - arr[1].x;
+      var dy = arr[0].y - arr[1].y;
+      if (Math.abs(dx) > 1) dx = -Math.sign(dx);
+      if (Math.abs(dy) > 1) dy = -Math.sign(dy);
+      if (dx || dy) dd = { x: dx, y: dy };
+    }
+
+    drawSnakeArr(arr, dd, frame.e || null);
+  }
+
+  function render() {
+    if (state === 'replay' && replayData) {
+      var f = replayData.frames[replayState.index];
+      if (f) renderFrame(f, time);
+      else ctx.drawImage(bgCanvas, 0, 0, W, H);
+      return;
+    }
+    if (state === 'menu' || !game.snake.length) {
+      ctx.drawImage(bgCanvas, 0, 0, W, H);
+      return;
+    }
+    var snap = {
+      s: [],
+      f: game.food ? [game.food.x, game.food.y] : null,
+      it: [],
+      e: game.effects
+    };
+    for (var i = 0; i < game.snake.length; i++)
+      snap.s.push(game.snake[i].x, game.snake[i].y);
+    for (var j = 0; j < game.items.length; j++)
+      snap.it.push(game.items[j].x, game.items[j].y, game.items[j].type);
+
+    ctx.drawImage(bgCanvas, 0, 0, W, H);
+
+    var flow = (time / 1400) % 1;
+    ctx.save();
+    ctx.globalAlpha = 0.22;
+    ctx.strokeStyle = '#22d3ee';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([CELL * 0.6, CELL * 0.9]);
+    ctx.lineDashOffset = -flow * CELL * 3;
+    ctx.strokeRect(1, 1, W - 2, H - 2);
+    ctx.restore();
+
+    for (var k = 0; k < portals.length; k++) drawPortal(portals[k], time);
+
+    if (game.food) drawFood(game.food.x, game.food.y, time);
+
+    for (var m = 0; m < game.items.length; m++) {
+      var it = game.items[m];
+      drawItem(it.x, it.y, it.type, it.lifeLeft, time);
+    }
+
+    drawSnakeArr(game.snake, game.dir, game.effects);
+  }
+
+  /* =========================================================
+     21. 主循环
+     ========================================================= */
+  function loop(ts) {
+    requestAnimationFrame(loop);
+    if (!lastTs) lastTs = ts;
+    var dt = ts - lastTs;
+    lastTs = ts;
+    time = ts;
+    if (dt > 200) dt = 200;
+
+    if (state === 'running') {
+      updateTimers(dt);
+      if (state === 'running') {
+        var eff = getEffectiveStepMs();
+        acc += dt;
+        var guard = 0;
+        while (acc >= eff && guard++ < 5) {
+          acc -= eff;
+          stepGame();
+          if (state !== 'running') { acc = 0; break; }
+        }
+      }
+    } else if (state === 'replay') {
+      updateReplay(dt);
+    }
+
+    render();
+  }
+
+  /* =========================================================
+     22. 输入
+     ========================================================= */
+  var KEYMAP = {
+    ArrowUp:    { x: 0,  y: -1 },
+    ArrowDown:  { x: 0,  y: 1  },
+    ArrowLeft:  { x: -1, y: 0  },
+    ArrowRight: { x: 1,  y: 0  },
+    w: { x: 0,  y: -1 },
+    s: { x: 0,  y: 1  },
+    a: { x: -1, y: 0  },
+    d: { x: 1,  y: 0  }
+  };
+
+  function pushDir(nd) {
+    if (game.ai) return;
+    if (state !== 'running') return;
+    if (game.mode === 'timed' && state !== 'running') return;
+
+    var last = game.queue.length ? game.queue[game.queue.length - 1] : game.dir;
+    if (nd.x === -last.x && nd.y === -last.y) return;
+    if (nd.x === last.x && nd.y === last.y) return;
+    if (game.queue.length >= 2) return;
+    game.queue.push(nd);
+  }
+
+  window.addEventListener('keydown', function (e) {
+    if (!screens.game.classList.contains('active')) return;
+    if (state === 'replay') {
+      if (e.key === ' ') { e.preventDefault(); toggleReplay(); }
+      if (e.key === 'Escape') exitReplay();
+      return;
+    }
+    var k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+
+    if (KEYMAP[k]) {
+      e.preventDefault();
+      pushDir(KEYMAP[k]);
+      return;
+    }
+    if (k === ' ' || k === 'Enter') {
+      e.preventDefault();
+      if (state === 'running') { if (game.mode !== 'timed') pauseGame(); }
+      else if (state === 'paused') resumeGame();
+    }
+  }, { passive: false });
+
+  /* ---- 触摸滑动 ---- */
+  var tsx = 0, tsy = 0, touching = false;
+  canvas.addEventListener('touchstart', function (e) {
+    var t = e.changedTouches[0];
+    tsx = t.clientX; tsy = t.clientY;
+    touching = true;
+    if (state === 'paused') resumeGame();
+  }, { passive: true });
+  canvas.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+  canvas.addEventListener('touchend', function (e) {
+    if (!touching) return;
+    touching = false;
+    var t = e.changedTouches[0];
+    var dx = t.clientX - tsx;
+    var dy = t.clientY - tsy;
+
+    if (Math.hypot(dx, dy) < 22) {
+      if (state === 'running' && game.mode !== 'timed') pauseGame();
+      else if (state === 'paused') resumeGame();
+      return;
+    }
+    if (Math.abs(dx) > Math.abs(dy)) pushDir({ x: dx > 0 ? 1 : -1, y: 0 });
+    else                             pushDir({ x: 0, y: dy > 0 ? 1 : -1 });
+  }, { passive: true });
+
+  /* =========================================================
+     23. 回放
+     ========================================================= */
+  function enterReplay() {
+    if (!game.replay || game.replay.frames.length === 0) return;
+    replayData = game.replay;
+    replayState.playing = true;
+    replayState.index = 0;
+    replayState.acc = 0;
+    replayState.frameMs = Math.max(30, Math.min(120, getBaseStepMs() * 0.8));
+    state = 'replay';
+    hideOverlay();
+    $('gameControls').style.display = 'none';
+    $('replayBar').style.display = '';
+    $('timeHud').style.display = 'none';
+    $('lenHud').style.display = 'none';
+    updateReplayUI();
+  }
+
+  function exitReplay() {
+    state = 'over';
+    replayData = null;
+    $('gameControls').style.display = '';
+    $('replayBar').style.display = 'none';
+    showOverlay(
+      '本局结束',
+      '得分 <b style="color:#4ade80">' + game.score + '</b>　长度 ' + game.snake.length,
+      '重新开始',
+      true
+    );
+  }
+
+  function toggleReplay() {
+    if (state !== 'replay') return;
+    if (replayState.index >= replayData.frames.length - 1) {
+      replayState.index = 0;
+      replayState.acc = 0;
+    }
+    replayState.playing = !replayState.playing;
+    updateReplayUI();
+  }
+
+  function updateReplay(dt) {
+    if (!replayData) return;
+    if (!replayState.playing) return;
+    replayState.acc += dt;
+    while (replayState.acc >= replayState.frameMs) {
+      replayState.acc -= replayState.frameMs;
+      replayState.index++;
+      if (replayState.index >= replayData.frames.length) {
+        replayState.index = replayData.frames.length - 1;
+        replayState.playing = false;
+        break;
+      }
+    }
+    updateReplayUI();
+  }
+
+  function updateReplayUI() {
+    if (!replayData) return;
+    var n = replayData.frames.length;
+    var pct = n > 1 ? (replayState.index / (n - 1)) * 100 : 100;
+    $('replayFill').style.width = pct + '%';
+    $('replayLabel').textContent = replayState.index + ' / ' + (n - 1) + ' 步';
+    $('replayPlay').textContent = replayState.playing ? '❙❙' : '▶';
+  }
+
+  $('replayPlay').addEventListener('click', toggleReplay);
+  $('replayExit').addEventListener('click', exitReplay);
+  $('replayProgress').addEventListener('click', function (e) {
+    if (!replayData) return;
+    var rect = this.getBoundingClientRect();
+    var pct = (e.clientX - rect.left) / rect.width;
+    pct = Math.max(0, Math.min(1, pct));
+    replayState.index = Math.round(pct * (replayData.frames.length - 1));
+    replayState.acc = 0;
+    updateReplayUI();
+  });
+
+  /* =========================================================
+     24. 主菜单 / 皮肤 / logo
+     ========================================================= */
+  function drawLogoSkin() {
+    var cv = $('logoSkin');
+    var c = cv.getContext('2d');
+    var d = Math.min(window.devicePixelRatio || 1, 2);
+    var w = 220, h = 60;
+    cv.width = w * d;
+    cv.height = h * d;
+    cv.style.width = w + 'px';
+    cv.style.height = h + 'px';
+    c.setTransform(d, 0, 0, d, 0, 0);
+    c.clearRect(0, 0, w, h);
+
+    var skin = SKINS[skinIdx] || SKINS[0];
+    var seg = 7, size = 17, gap = 5;
+    var totalW = seg * (size + gap) - gap;
+    var startX = (w - totalW) / 2;
+    var baseY = h / 2;
+
+    for (var i = seg - 1; i >= 0; i--) {
+      var t = i / (seg - 1);
+      var x = startX + i * (size + gap);
+      var y = baseY + Math.sin(i * 0.85) * 5;
+      c.fillStyle = (i === 0) ? skin.head : skin.body(t);
+      roundRect(c, x, y - size / 2, size, size, i === 0 ? 6 : 4);
+      c.fill();
+    }
+
+    var hx = startX + size / 2;
+    var hy = baseY;
+    c.fillStyle = skin.eye || '#062b16';
+    c.beginPath(); c.arc(hx + 3.2, hy - 3, 1.9, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.arc(hx + 3.2, hy + 3, 1.9, 0, Math.PI * 2); c.fill();
+  }
+
+  function buildSkinRow() {
+    var row = $('skinRow');
+    row.innerHTML = '';
+    SKINS.forEach(function (sk, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'skin-dot' + (i === skinIdx ? ' on' : '');
+      b.title = sk.name;
+      b.style.background = 'linear-gradient(135deg,' + sk.head + ',' + sk.body(0.85) + ')';
+      b.addEventListener('click', function () {
+        skinIdx = i;
+        store.set('skin', skinIdx);
+        buildSkinRow();
+        drawLogoSkin();
+        $('skinLabel').textContent = sk.name;
+      });
+      row.appendChild(b);
+    });
+    $('skinLabel').textContent = SKINS[skinIdx].name;
+  }
+
+  /* =========================================================
+     25. 地图列表
+     ========================================================= */
+  function drawPreview(cv, mapId) {
+    var c = cv.getContext('2d');
+    var S = 20;
+    var cell = cv.width / S;
+    var map = getMap(mapId);
+    var res = map.gen(S, S) || {};
+    var blocks = res.blocks || [];
+    var pairs = res.portals || [];
+
+    c.fillStyle = '#0e1621';
+    c.fillRect(0, 0, cv.width, cv.height);
+    c.fillStyle = 'rgba(255,255,255,.03)';
+    for (var y = 0; y < S; y++)
+      for (var x = 0; x < S; x++)
+        if ((x + y) % 2 === 0) c.fillRect(x * cell, y * cell, cell, cell);
+
+    c.fillStyle = '#3b5570';
+    for (var i = 0; i < blocks.length; i++) {
+      var p = blocks[i];
+      if (p.x < 0 || p.x >= S || p.y < 0 || p.y >= S) continue;
+      c.fillRect(p.x * cell + 0.5, p.y * cell + 0.5, cell - 1, cell - 1);
+    }
+
+    for (var j = 0; j < pairs.length; j++) {
+      var pr = pairs[j];
+      if (!pr || !pr.a || !pr.b) continue;
+      var col = PORTAL_COLORS[j % PORTAL_COLORS.length];
+      [pr.a, pr.b].forEach(function (pp) {
+        if (pp.x < 0 || pp.x >= S || pp.y < 0 || pp.y >= S) return;
+        c.strokeStyle = col; c.lineWidth = 1.6;
+        c.beginPath();
+        c.arc(pp.x * cell + cell / 2, pp.y * cell + cell / 2, cell * 0.34, 0, Math.PI * 2);
+        c.stroke();
+      });
+    }
+  }
+
+  function buildMapList() {
+    var list = $('mapList');
+    list.innerHTML = '';
+    MAPS.forEach(function (m) {
+      var card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'map-card' + (m.id === settings.mapId ? ' selected' : '');
+
+      var cv = document.createElement('canvas');
+      cv.width = 144;
+      cv.height = 144;
+      cv.className = 'map-prev';
+      drawPreview(cv, m.id);
+
+      var info = document.createElement('div');
+      var nm = document.createElement('div');
+      nm.className = 'map-name';
+      nm.textContent = m.name;
+      var ds = document.createElement('div');
+      ds.className = 'map-desc';
+      ds.textContent = m.desc;
+      info.appendChild(nm);
+      info.appendChild(ds);
+
+      card.appendChild(cv);
+      card.appendChild(info);
+
+      card.addEventListener('click', function () {
+        settings.mapId = m.id;
+        store.set('map', m.id);
+        updateMenuMeta();
+        var kids = list.children;
+        for (var i = 0; i < kids.length; i++) kids[i].classList.remove('selected');
+        card.classList.add('selected');
+      });
+      list.appendChild(card);
+    });
+  }
+
+  /* =========================================================
+     26. 介绍
+     ========================================================= */
+    function buildIntro() {
+    $('introBody').innerHTML = '' +
+      '<h3>基本玩法</h3>' +
+      '<p>用方向键或滑动控制蛇的移动，吃掉棋盘上的红色果实让蛇变长。</p>' +
+      '<p><b>边界可穿越</b>：蛇头从一侧出去，会从对侧相同位置进来。</p>' +
+      '<p>撞到<b class="warn">自身</b>或<b class="warn">障碍物</b>会立即结束本局。</p>' +
+
+      '<h3>得分规则</h3>' +
+      '<p>吃到一个果实得 <b>5 ~ 100 分</b>，取决于你从上个果实到现在的移动格数：</p>' +
+      '<ul>' +
+      '<li>只走了 1 格 → <b>100 分</b>（最快）</li>' +
+      '<li>走满 100 格以上 → <b>5 分</b>（最低）</li>' +
+      '<li>中间按线性递减</li>' +
+      '</ul>' +
+      '<p>这意味着<b>绕远路找食物不划算</b>，需要规划最短路线。</p>' +
+
+      '<h3>速度机制</h3>' +
+      '<p>默认情况下，每吃 <b>5 个果实</b>，蛇的速度就会提升一档，最多提速 5 档后到达当前速度档位的上限。</p>' +
+      '<p>可以在设置里关闭“加速机制”，让蛇保持匀速。</p>' +
+
+      '<h3>道具</h3>' +
+      '<p>棋盘中每 <b>5 秒</b>自动刷新一个道具，最多同时存在 5 个。走到道具格上即可拾取。每个道具有停留时限，超时会自动消失。</p>' +
+      '<ul>' +
+      '<li><span class="tag" style="background:#fbbf2426;color:#fbbf24">加速</span>5 秒内速度加快（停留 10 秒）</li>' +
+      '<li><span class="tag" style="background:#60a5fa26;color:#60a5fa">减速</span>5 秒内速度减慢（停留 10 秒）</li>' +
+      '<li><span class="tag" style="background:#a78bfa26;color:#a78bfa">幽灵</span>3 秒内可以穿过自身（停留 8 秒）</li>' +
+      '<li><span class="tag" style="background:#f8717126;color:#f87171">缩短</span>立即缩短 5 节（停留 12 秒）</li>' +
+      '<li><span class="tag" style="background:#facc1526;color:#facc15">双倍</span>15 秒内得分翻倍（停留 15 秒）</li>' +
+      '<li><span class="tag" style="background:#34d39926;color:#34d399">护盾</span>抵挡一次死亡（停留 8 秒）</li>' +
+      '<li><span class="tag" style="background:#22d3ee26;color:#22d3ee">加时</span>限时模式专属，剩余时间 +5 秒（停留 12 秒）</li>' +
+      '</ul>' +
+
+      '<h3>传送门</h3>' +
+      '<p>部分地图上有成对出现的彩色圆圈，这就是传送门。</p>' +
+      '<p>蛇头踩上传送门会被<b>瞬间传送到同色传送门</b>所在的格子。</p>' +
+      '<p>传送后如果落点被自己的身体占据，同样算作撞到自己。</p>' +
+
+      '<h3>模式</h3>' +
+      '<p><b>经典模式</b>：不限时间，慢慢玩，吃到填满整个棋盘为止。开局前选择手动或 AI，开始后不可切换。</p>' +
+      '<p><b>限时模式</b>：60 秒内尽可能拿高分，开局前选择手动或 AI，开始后不可切换，也不能手动暂停。</p>' +
+
+      '<h3>AI 托管</h3>' +
+      '<p>AI 使用贪心 + 安全校验 + 传送门感知的寻路算法：</p>' +
+      '<ul>' +
+      '<li>优先保证蛇头能够追到蛇尾，避免把自己困死</li>' +
+      '<li>在安全的前提下，优先朝离自己最近的果实移动</li>' +
+      '<li>会主动评估附近道具的价值，在安全时绕路拾取</li>' +
+      '<li>会利用传送门作为捷径，并自动考虑道具效果</li>' +
+      '</ul>' +
+      '<p>AI 不是最优算法，但能稳定拿到比较高的分数。</p>' +
+
+      '<h3>最高分</h3>' +
+      '<p>最高分按<b>模式 + 地图 + 是否 AI</b> 分别记录，互不覆盖。</p>' +
+      '<p>主菜单显示的是当前地图下所有组合里的最好成绩；游戏中 HUD 显示的是本局对应组合的历史最高分。</p>' +
+
+      '<h3>皮肤</h3>' +
+      '<p>主菜单可以切换蛇的外观：<b>经典绿、霓虹紫、熔岩、深海、彩虹</b>五种，顶部的小蛇预览会同步变化。</p>' +
+
+      '<h3>操作</h3>' +
+      '<p><b>电脑</b>：方向键 或 WASD 控制方向，空格暂停 / 继续。</p>' +
+      '<p><b>手机</b>：在棋盘上滑动控制方向，轻触棋盘暂停 / 继续。</p>' +
+
+      '<h3>回放</h3>' +
+      '<p>每局结束后，结算界面会有“回放”按钮，可以重新观看这一局的完整过程。</p>';
+  }
+
+  /* =========================================================
+     27. 设置界面
+     ========================================================= */
+  function syncOptButtons() {
+    var sp = $('speedOpts').children;
+    for (var i = 0; i < sp.length; i++)
+      sp[i].classList.toggle('on', sp[i].dataset.v === settings.speed);
+    var sz = $('sizeOpts').children;
+    for (var j = 0; j < sz.length; j++)
+      sz[j].classList.toggle('on', Number(sz[j].dataset.v) === settings.size);
+    var ic = $('incOpts').children;
+    for (var k = 0; k < ic.length; k++)
+      ic[k].classList.toggle('on', (ic[k].dataset.v === 'on') === settings.speedUp);
+  }
+
+  $('speedOpts').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    settings.speed = b.dataset.v;
+    store.set('speed', settings.speed);
+    syncOptButtons();
+  });
+  $('sizeOpts').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    settings.size = Number(b.dataset.v);
+    store.set('size', settings.size);
+    syncOptButtons();
+  });
+  $('incOpts').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    settings.speedUp = (b.dataset.v === 'on');
+    store.set('speedUp', settings.speedUp);
+    syncOptButtons();
+  });
+
+  /* =========================================================
+     28. 导航 / 按钮
+     ========================================================= */
+  function updateMenuMeta() {
+    $('menuBest').textContent = getMapBest(settings.mapId);
+    $('menuMapName').textContent = getMap(settings.mapId).name;
+  }
+
+  var pendingMode = 'classic';
+
+  function openStartModal(mode) {
+    pendingMode = mode;
+    $('modalStartTitle').textContent =
+      (mode === 'timed') ? '限时模式 · 60 秒' : '经典模式';
+    $('modalStartDesc').innerHTML =
+      (mode === 'timed')
+        ? '选择本局操控方式，开始后不可更改。<br>本模式无法手动暂停。'
+        : '选择本局操控方式，开始后不可更改。';
+    $('modalStart').classList.add('show');
+  }
+
+  $('btnPlay').addEventListener('click', function () { openStartModal('classic'); });
+  $('btnTimed').addEventListener('click', function () { openStartModal('timed'); });
+
+  $('startManual').addEventListener('click', function () {
+    $('modalStart').classList.remove('show');
+    startGame(pendingMode, false);
+  });
+  $('startAI').addEventListener('click', function () {
+    $('modalStart').classList.remove('show');
+    startGame(pendingMode, true);
+  });
+  $('startCancel').addEventListener('click', function () {
+    $('modalStart').classList.remove('show');
+  });
+
+  $('btnSet').addEventListener('click', function () {
+    syncOptButtons();
+    showScreen('settings');
+  });
+  $('btnMap').addEventListener('click', function () {
+    buildMapList();
+    showScreen('maps');
+  });
+  $('btnIntro').addEventListener('click', function () {
+    buildIntro();
+    showScreen('intro');
+  });
+  $('setBack').addEventListener('click', function () { showScreen('menu'); });
+  $('mapBack').addEventListener('click', function () { showScreen('menu'); });
+  $('introBack').addEventListener('click', function () { showScreen('menu'); });
+
+  $('btnPause').addEventListener('click', function () {
+    if (game.mode === 'timed') return;
+    if (state === 'running') pauseGame();
+    else if (state === 'paused') resumeGame();
+  });
+
+  $('btnAI').addEventListener('click', function () {
+  });
+
+  $('btnHome').addEventListener('click', function () {
+    state = 'menu';
+    game.ai = false;
+    $('btnAI').textContent = 'AI 托管：关';
+    $('btnAI').classList.remove('active');
+    $('replayBar').style.display = 'none';
+    $('gameControls').style.display = '';
+    updateMenuMeta();
+    showScreen('menu');
+  });
+
+  $('ovBtn').addEventListener('click', function () {
+    if (state === 'paused') resumeGame();
+    else {
+      /* 结算界面：按当前模式重新开始 */
+      startGame(game.mode, game.mode === 'timed' ? game.ai : false);
+    }
+  });
+
+  $('ovReplayBtn').addEventListener('click', function () {
+    enterReplay();
+  });
+
+  /* ---- 切后台自动暂停（限时模式也暂停计时） ---- */
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden && state === 'running') {
+      state = 'paused';
+      showOverlay('已暂停', '切回游戏后自动继续', '继续', false);
+    }
+  });
+  window.addEventListener('blur', function () {
+    if (state === 'running' && !IS_MOBILE) {
+      state = 'paused';
+      showOverlay('已暂停', '点击继续或按空格恢复', '继续', false);
+    }
+  });
+  window.addEventListener('focus', function () {
+    if (state === 'paused') {
+      /* 自动恢复（如果是切后台触发的） */
+      resumeGame();
+    }
+  });
+
+  /* =========================================================
+     29. 启动
+     ========================================================= */
+  function init() {
+    initItemIcons();
+    syncOptButtons();
+    updateMenuMeta();
+    buildSkinRow();
+    drawLogoSkin();
+    buildBoard();
+    state = 'menu';
+    requestAnimationFrame(loop);
+  }
+
+  init();
+
+})();
+</script>
+</body>
+</html>
